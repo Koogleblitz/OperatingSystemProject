@@ -7,6 +7,8 @@
 #include "mmu.h"
 #include "proc.h"
 
+
+
 int
 sys_fork(void)
 {
@@ -16,14 +18,22 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  exit();
-  return 0;  // not reached
+  int status;
+  if(argint(0, &status) < 0){
+    return -1;
+  }
+  exit(status);
+  return status;
 }
 
 int
 sys_wait(void)
 {
-  return wait();
+  int* status;
+  if(argptr(0, (char**) &status, sizeof(int*)) < 0){
+    return -1;
+  }
+  return wait(status);
 }
 
 int
@@ -41,6 +51,22 @@ sys_getpid(void)
 {
   return myproc()->pid;
 }
+
+///---------------Richard's--------------------------///
+
+int sys_debug(void)
+{
+  cprintf("\n\n--------Process Fields-------\n");
+  cprintf( "Name:  %d\n", myproc()->name);
+  cprintf( "Parent PID:  %d\n", myproc()->parent->pid);
+  cprintf("Size:  %d\n", myproc()->sz);
+  cprintf("PID:  %d\n", myproc()->pid);
+  cprintf("Killed?:  %d\n", myproc()->killed);
+  cprintf("Status:  %d\n", myproc()->status);
+  cprintf("State:  %d\n", myproc()->state);
+  return 0;
+}
+///---------------\Richard's--------------------------///
 
 int
 sys_sbrk(void)
@@ -89,3 +115,33 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int sys_add(void){
+  int a = 66;
+  int b = 77;
+  return a+b;
+}
+
+int sys_waitpid(void){
+
+  int pid = 0;
+  int options = 0;
+  int* exit_status;
+  if(argint(0, &pid) < 0){
+    return -1;
+  }
+
+  if(argptr(1, (void*) &exit_status, sizeof(exit_status)) < 0){
+    return -1;
+  }
+
+  if(argint(2, &options) < 0){
+    return -1;
+  }
+
+  return waitpid(pid, exit_status, options);
+}
+
+
+
+

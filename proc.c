@@ -225,7 +225,7 @@ fork(void)
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
 void
-exit(void)
+exit(int status)
 {
   struct proc *curproc = myproc();
   struct proc *p;
@@ -239,6 +239,7 @@ exit(void)
     if(curproc->ofile[fd]){
       fileclose(curproc->ofile[fd]);
       curproc->ofile[fd] = 0;
+      curproc->status = status;
     }
   }
 
@@ -270,7 +271,7 @@ exit(void)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(void)
+wait(int* status)
 {
   struct proc *p;
   int havekids, pid;
@@ -285,6 +286,9 @@ wait(void)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
+        if(p->status != 0){
+          *status = p->status;
+        }
         // Found one.
         pid = p->pid;
         kfree(p->kstack);
@@ -530,5 +534,48 @@ procdump(void)
         cprintf(" %p", pc[i]);
     }
     cprintf("\n");
+  }
+}
+
+int waitpid(int pid, int* exit_status, int options)
+{
+  struct proc *p;
+  struct proc *curproc = myproc();
+  int found_proccess;
+
+  acquire(&ptable.lock);
+  for(;;){
+    found_proccess = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid != pid){
+        continue;
+      }
+      found_proccess = 1;
+
+      // Found one.
+      // Copy from wait function
+      if(p->state == ZOMBIE){
+
+        if(exit_status){
+          *exit_status = p->status;
+        }
+
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+    if(!found_proccess || curproc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+    sleep(curproc, &ptable.lock);
   }
 }
