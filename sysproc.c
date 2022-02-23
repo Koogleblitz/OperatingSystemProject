@@ -52,7 +52,7 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
-///---------------Richard's--------------------------///
+///--------------- [+] Addendums --------------------------///
 
 int sys_debug(void)
 {
@@ -66,7 +66,18 @@ int sys_debug(void)
   cprintf("State:  %d\n", myproc()->state);
   return 0;
 }
-///---------------\Richard's--------------------------///
+
+//Passes int into the kernal function, filters it out if its <0. Then calls setPriority() in proc.c using that value as the new priority
+int sys_setPriority(void){
+  int prioNum;
+  if(   argint(0, &prioNum) < 0   ){
+    return -1;
+  } 
+
+  return setPriority(prioNum);
+
+}
+///---------------\ Addendums--------------------------///
 
 int
 sys_sbrk(void)

@@ -50,6 +50,10 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int status;
+
+  // [+] Fields for Priority Scheduling:
+  int priority;                 // The priority number (1-10)
+  int probiority;               // the priority as a probability, will use for lottery
 };
 
 // Process memory is laid out contiguously, low addresses first:

@@ -104,9 +104,14 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_add(void);
+
+// [+] new waidpid and debug syscalls
 extern int sys_waitpid(void);
 extern int sys_debug(void);
 
+
+// [+] syscall for Priority Scheduling
+extern int sys_setPriority(void);
 
 
 static int (*syscalls[])(void) = {
@@ -132,8 +137,13 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_add]     sys_add,
+
+// [+] new waidpid and debug syscalls
 [SYS_waitpid] sys_waitpid,
 [SYS_debug]   sys_debug,
+
+// [+] For priority scheduling syscall
+[SYS_setPriority] sys_setPriority, 
 };
 
 void
