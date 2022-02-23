@@ -184,6 +184,8 @@ fork(void)
   struct proc *np;
   struct proc *curproc = myproc();
 
+
+
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
@@ -199,6 +201,10 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+
+  // [+] Inheritance for priority scheduling
+  np->priority= curproc->priority;
+  np->probiority= curproc->probiority;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -537,6 +543,10 @@ procdump(void)
   }
 }
 
+
+
+// ----------------------------------[+] Addendums-------------------------------------------------------//
+
 int waitpid(int pid, int* exit_status, int options)
 {
   struct proc *p;
@@ -579,3 +589,22 @@ int waitpid(int pid, int* exit_status, int options)
     sleep(curproc, &ptable.lock);
   }
 }
+
+
+int setPriority(int newPriority)
+{
+  struct proc *process= myproc();
+
+  // Range check for priority value:
+  if(newPriority <= 10){
+    if(newPriority >= 0){
+      process->priority= newPriority;
+      process->probiority= (newPriority * 10);
+
+      //get lock, set lock, release lock:
+      yield();
+    }
+  }
+  return 0;
+}
+// ----------------------------------\ Addendums----------------------------------------------------//

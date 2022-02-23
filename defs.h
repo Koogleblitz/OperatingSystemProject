@@ -120,7 +120,10 @@ void            userinit(void);
 int             wait(int*);
 void            wakeup(void*);
 void            yield(void);
+
+//[+] New stuff in proc.c:
 int             waitpid(int, int*, int);
+int             setPriority(int priority);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

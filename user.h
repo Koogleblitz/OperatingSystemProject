@@ -24,8 +24,11 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int add(void);
+
+//[+] Addendum System calls
 int waitpid(int, int*, int);
 int debug(void);
+int setPriority(int);
 
 
 // ulib.c

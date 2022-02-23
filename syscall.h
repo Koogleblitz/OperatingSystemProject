@@ -22,6 +22,11 @@
 #define SYS_close  21
 #define SYS_add    22
 #define SYS_waitpid 23
+
+// [+] For new debugging syscall
 #define SYS_debug  24
+
+// [+] For priority scheduling
+#define SYS_setPriority 25
 
 
