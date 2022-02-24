@@ -243,17 +243,17 @@ exit(int status)
   int fd;
 
   acquire(&tickslock);
-  curproc->finish_time = ticks;
+  curproc->end_time = ticks;
   release(&tickslock);
 
    cprintf("::::::::::::::::::::::::::::::::::\n");
   cprintf("\n::::::::::Program: %s\n", curproc->name);
   cprintf("PID: %d\n", curproc->pid);
   cprintf("Start Time: %d\n", curproc->start_time);
-  cprintf("End Time: %d\n", curproc->finish_time);
-  cprintf("Turnaround Time:%d\n", curproc->finish_time - curproc->start_time);
-  cprintf("Burst Time: %d\n", curproc->burst_time);
-  cprintf("Waiting Time: %d\n", curproc->finish_time - curproc->start_time - curproc->burst_time);
+  cprintf("End Time: %d\n", curproc->end_time);
+  cprintf("Turnaround Time:%d\n", curproc->end_time - curproc->start_time);
+  cprintf("Burst Time: %d\n", curproc->runtime);
+  cprintf("Waiting Time: %d\n", curproc->end_time - curproc->start_time - curproc->runtime);
   cprintf("Program: %s, Priority Value (Ending): %d\n", curproc->name, curproc->priority);
   cprintf("::::::::::::::::::::::::::::::::::\n");
 
@@ -405,8 +405,8 @@ scheduler(void)
 
 
         // [+] Update Burst Time and tick-------
-        p->burst_time = p->burst_time + 1;
-        p->previous_tick = ticks;
+        p->runtime = p->runtime + 1;
+        p->last_tick = ticks;
 
       }
       

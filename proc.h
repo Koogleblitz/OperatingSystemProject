@@ -55,9 +55,9 @@ struct proc {
   int priority;                 // The priority number (1-10)
   int probiority;               // the priority as a probability, will use for lottery
   int start_time;               // start time of turnaround time
-  int finish_time;
-  int burst_time;               // process runtime
-  int previous_tick;            // last time burst_time was updated
+  int end_time;
+  int runtime;               // process runtime
+  int last_tick;            // last time runtime was updated
 };
 
 // Process memory is laid out contiguously, low addresses first:

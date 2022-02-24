@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv)
 {
-    printf(1, "\n::::Process 2:::: [PID: %d, Priority Value: %d]\n", getpid(), 5);
+    printf(1, "\n---Process 2--- [PID: %d, Priority Value: %d]\n", getpid(), 5);
     set_priority(5);
     int i, k;
     const int loop = 40000;
