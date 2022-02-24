@@ -246,6 +246,12 @@ exit(int status)
   curproc->end_time = ticks;
   release(&tickslock);
 
+  // int randNum= curproc->end_time;
+  // while(randNum >= 10){
+  //   randNum= randNum-10;
+  // }
+  // cprintf("rando: %d\n", randNum);
+
    cprintf("::::::::::::::::::::::::::::::::::\n");
   cprintf("\n::::::::::Program: %s\n", curproc->name);
   cprintf("PID: %d\n", curproc->pid);
@@ -257,8 +263,12 @@ exit(int status)
   cprintf("Program: %s, Priority Value (Ending): %d\n", curproc->name, curproc->priority);
   cprintf("::::::::::::::::::::::::::::::::::\n");
 
+
+
+
   if(curproc == initproc)
     panic("init exiting");
+
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -340,6 +350,29 @@ wait(int* status)
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
 }
+
+
+
+
+//------------------[+] Schedule Randomizer------------------//
+int lottery(void)
+{
+  acquire(&tickslock);
+  int randNum = ticks;
+  release(&tickslock);
+
+  while(randNum >= 10){
+    randNum= randNum-10;
+  }
+  return (randNum*10 + 5);
+}
+//-----------------\Schedule Randomizer-----------------------//
+
+
+
+
+
+
 
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
