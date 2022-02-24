@@ -183,9 +183,9 @@ UPROGS=\
 	_zombie\
 	_hello\
 	_waitpid\
-	_prog1\
-	_prog2\
-	_prog3\
+	_priority1\
+	_priority2\
+	_priority3\
 
 
 fs.img: mkfs README $(UPROGS)

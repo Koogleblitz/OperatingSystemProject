@@ -7,6 +7,10 @@
 #include "proc.h"
 #include "spinlock.h"
 
+// [+] For lottery scheduling:
+#include <time.h>
+#include <stdlib.h>
+
 
 struct {
   struct spinlock lock;
@@ -238,25 +242,20 @@ exit(int status)
   struct proc *p;
   int fd;
 
-  // lab2
-  // Calculate turnaround time 
-  int turnaround_time;
   acquire(&tickslock);
   curproc->finish_time = ticks;
-  turnaround_time = curproc->finish_time - curproc->begin_time;
   release(&tickslock);
 
-  cprintf("\nProgram: %s\n", curproc->name);
+   cprintf("::::::::::::::::::::::::::::::::::\n");
+  cprintf("\n::::::::::Program: %s\n", curproc->name);
   cprintf("PID: %d\n", curproc->pid);
   cprintf("Start Time: %d\n", curproc->begin_time);
   cprintf("End Time: %d\n", curproc->finish_time);
-  cprintf("Turnaround Time:%d\n", turnaround_time);
+  cprintf("Turnaround Time:%d\n", curproc->finish_time - curproc->begin_time);
   cprintf("Burst Time: %d\n", curproc->burst_time);
-  cprintf("Waiting Time: %d\n", turnaround_time - curproc->burst_time);
-  cprintf("\n");
-
+  cprintf("Waiting Time: %d\n", curproc->finish_time - curproc->begin_time - curproc->burst_time);
   cprintf("Program: %s, Priority Value (Ending): %d\n", curproc->name, curproc->priority);
-  cprintf("\n");
+  cprintf("::::::::::::::::::::::::::::::::::\n");
 
   if(curproc == initproc)
     panic("init exiting");
@@ -350,12 +349,16 @@ wait(int* status)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
+//------------------------[+] Modified Scheduler ------------------//
 void
 scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+
+  
   
   for(;;){
     // Enable interrupts on this processor.
@@ -378,6 +381,9 @@ scheduler(void)
       if(p->state != RUNNABLE){
         continue;
       }
+
+
+      //[+] Run the process with the highest priority-----
       if(p->priority == highest_priority){
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
@@ -387,34 +393,32 @@ scheduler(void)
         p->state = RUNNING;
         swtch(&(c->scheduler), p->context);
         switchkvm();
-
         // Process is done running for now.
         // It should have changed its p->state before coming back.
         c->proc = 0;
 
-        if (p->priority < 10){
-          p->priority = p->priority + 1;
-        }
 
-        acquire(&tickslock);
-        int curr_ticks = ticks;
-
-        if (curr_ticks > p->previous_tick){
-          p->burst_time = p->burst_time + 1;
-          p->previous_tick = curr_ticks;
-        }
-
-        release(&tickslock);
-
-      }else{
+        //[+] Lower the priority of running program
         if(p->priority > 0){
           p->priority = p->priority - 1;
+        }
+
+
+        // [+] Update Burst Time and tick-------
+        p->burst_time = p->burst_time + 1;
+        p->previous_tick = ticks;
+
+      }
+      
+      //[+] Raise the prioirty of non-running process
+      else{
+        if (p->priority < 10){
+          p->priority = p->priority + 1;
         }
       }
       
     }
     release(&ptable.lock);
-
   }
 }
 
@@ -425,6 +429,11 @@ scheduler(void)
 // be proc->intena and proc->ncli, but that would
 // break in the few places where a lock is held but
 // there's no process.
+
+//------------------------\ Modified Scheduler ------------------//
+
+
+
 void
 sched(void)
 {
