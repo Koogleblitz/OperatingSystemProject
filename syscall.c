@@ -111,7 +111,7 @@ extern int sys_debug(void);
 
 
 // [+] syscall for Priority Scheduling
-extern int sys_setPriority(void);
+extern int sys_set_priority(void);
 
 
 static int (*syscalls[])(void) = {
@@ -143,7 +143,7 @@ static int (*syscalls[])(void) = {
 [SYS_debug]   sys_debug,
 
 // [+] For priority scheduling syscall
-[SYS_setPriority] sys_setPriority, 
+[SYS_set_priority] sys_set_priority, 
 };
 
 void

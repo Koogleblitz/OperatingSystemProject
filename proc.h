@@ -54,6 +54,10 @@ struct proc {
   // [+] Fields for Priority Scheduling:
   int priority;                 // The priority number (1-10)
   int probiority;               // the priority as a probability, will use for lottery
+  int start_time;               // start time of turnaround time
+  int end_time;
+  int runtime;               // process runtime
+  int last_tick;            // last time runtime was updated
 };
 
 // Process memory is laid out contiguously, low addresses first:

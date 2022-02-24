@@ -123,7 +123,7 @@ void            yield(void);
 
 //[+] New stuff in proc.c:
 int             waitpid(int, int*, int);
-int             setPriority(int priority);
+int             set_priority(int priority_value);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

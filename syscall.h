@@ -27,6 +27,6 @@
 #define SYS_debug  24
 
 // [+] For priority scheduling
-#define SYS_setPriority 25
+#define SYS_set_priority 25
 
 

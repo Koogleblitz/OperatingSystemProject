@@ -93,6 +93,15 @@ exec(char *path, char **argv)
       last = s+1;
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
+
+  // lab2
+  // save ticks at start
+  acquire(&tickslock);
+  curproc->start_time = ticks;
+  curproc->last_tick = ticks;
+  curproc->runtime = 0;
+  release(&tickslock);
+
   // Commit to the user image.
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;

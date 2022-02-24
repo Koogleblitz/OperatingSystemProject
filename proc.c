@@ -7,6 +7,11 @@
 #include "proc.h"
 #include "spinlock.h"
 
+// [+] For lottery scheduling:
+#include <time.h>
+#include <stdlib.h>
+
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -237,8 +242,33 @@ exit(int status)
   struct proc *p;
   int fd;
 
+  acquire(&tickslock);
+  curproc->end_time = ticks;
+  release(&tickslock);
+
+  // int randNum= curproc->end_time;
+  // while(randNum >= 10){
+  //   randNum= randNum-10;
+  // }
+  // cprintf("rando: %d\n", randNum);
+
+   cprintf("::::::::::::::::::::::::::::::::::\n");
+  cprintf("\n::::::::::Program: %s\n", curproc->name);
+  cprintf("PID: %d\n", curproc->pid);
+  cprintf("Start Time: %d\n", curproc->start_time);
+  cprintf("End Time: %d\n", curproc->end_time);
+  cprintf("Turnaround Time:%d\n", curproc->end_time - curproc->start_time);
+  cprintf("Burst Time: %d\n", curproc->runtime);
+  cprintf("Waiting Time: %d\n", curproc->end_time - curproc->start_time - curproc->runtime);
+  cprintf("Program: %s, Priority Value (Ending): %d\n", curproc->name, curproc->priority);
+  cprintf("::::::::::::::::::::::::::::::::::\n");
+
+
+
+
   if(curproc == initproc)
     panic("init exiting");
+
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -321,6 +351,29 @@ wait(int* status)
   }
 }
 
+
+
+
+//------------------[+] Schedule Randomizer------------------//
+int lottery(void)
+{
+  acquire(&tickslock);
+  int randNum = ticks;
+  release(&tickslock);
+
+  while(randNum >= 10){
+    randNum= randNum-10;
+  }
+  return (randNum*10 + 5);
+}
+//-----------------\Schedule Randomizer-----------------------//
+
+
+
+
+
+
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -329,39 +382,76 @@ wait(int* status)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
+//------------------------[+] Modified Scheduler ------------------//
 void
 scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+
+  
   
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    acquire(&ptable.lock);
+
+    //[+] Gets the highest priority out of all the processes
+    int highest_priority = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state == RUNNABLE){
+        if (p->priority > highest_priority){
+          highest_priority = p->priority;
+        }
+      }
+    }
+    
 
     // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+      if(p->state != RUNNABLE){
         continue;
+      }
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
+      //[+] Run the process with the highest priority-----
+      if(p->priority == highest_priority){
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
 
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+
+        //[+] Lower the priority of running program
+        if(p->priority > 0){
+          p->priority = p->priority - 1;
+        }
+
+
+        // [+] Update Burst Time and tick-------
+        p->runtime = p->runtime + 1;
+        p->last_tick = ticks;
+
+      }
+      
+      //[+] Raise the prioirty of non-running process
+      else{
+        if (p->priority < 10){
+          p->priority = p->priority + 1;
+        }
+      }
+      
     }
     release(&ptable.lock);
-
   }
 }
 
@@ -372,6 +462,11 @@ scheduler(void)
 // be proc->intena and proc->ncli, but that would
 // break in the few places where a lock is held but
 // there's no process.
+
+//------------------------\ Modified Scheduler ------------------//
+
+
+
 void
 sched(void)
 {
@@ -591,7 +686,7 @@ int waitpid(int pid, int* exit_status, int options)
 }
 
 
-int setPriority(int newPriority)
+int set_priority(int newPriority)
 {
   struct proc *process= myproc();
 
