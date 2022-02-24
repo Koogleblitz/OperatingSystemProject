@@ -10,7 +10,7 @@
 // [+] For lottery scheduling:
 #include <time.h>
 #include <stdlib.h>
-
+int lottery(void);
 
 struct {
   struct spinlock lock;
@@ -246,13 +246,9 @@ exit(int status)
   curproc->end_time = ticks;
   release(&tickslock);
 
-  // int randNum= curproc->end_time;
-  // while(randNum >= 10){
-  //   randNum= randNum-10;
-  // }
-  // cprintf("rando: %d\n", randNum);
+  //cprintf("rando: %d\n", lottery());
 
-   cprintf("::::::::::::::::::::::::::::::::::\n");
+  cprintf("::::::::::::::::::::::::::::::::::\n");
   cprintf("\n::::::::::Program: %s\n", curproc->name);
   cprintf("PID: %d\n", curproc->pid);
   cprintf("Start Time: %d\n", curproc->start_time);
@@ -364,7 +360,7 @@ int lottery(void)
   while(randNum >= 10){
     randNum= randNum-10;
   }
-  return (randNum*10 + 5);
+  return (randNum*10 + 1);
 }
 //-----------------\Schedule Randomizer-----------------------//
 
@@ -399,25 +395,32 @@ scheduler(void)
     acquire(&ptable.lock);
 
     //[+] Gets the highest priority out of all the processes
-    int highest_priority = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state == RUNNABLE){
-        if (p->priority > highest_priority){
-          highest_priority = p->priority;
-        }
-      }
-    }
+    // int highest_priority = 0;
+    // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    //   if(p->state == RUNNABLE){
+    //     if (p->priority > highest_priority){
+    //       highest_priority = p->priority;
+    //     }
+    //   }
+    // }
     
 
     // Loop over process table looking for process to run.
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+
+      //[+] Skip unrunnable processes
       if(p->state != RUNNABLE){
         continue;
       }
 
+      //[+] Get lottery ticket
+      int ticket = 10*(p->priority);
+      int lotteryNum = lottery();
 
-      //[+] Run the process with the highest priority-----
-      if(p->priority == highest_priority){
+      //[+] Run the process if ticket value surpasses random lottery number, greater priority means greater likelyhood of running-----
+       if(ticket > lotteryNum){
+
+      //if(p->priority == highest_priority){
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -431,15 +434,20 @@ scheduler(void)
         c->proc = 0;
 
 
-        //[+] Lower the priority of running program
+        //[+] Lower the priority of currently running process
         if(p->priority > 0){
           p->priority = p->priority - 1;
         }
 
 
-        // [+] Update Burst Time and tick-------
+        // [+] Update Burst Time and tick of currently running process-------
         p->runtime = p->runtime + 1;
         p->last_tick = ticks;
+
+        if(p->runtime==200){
+          cprintf("ticket: %d\n", p->probiority);
+          cprintf("lotteryNum: %d\n", lotteryNum);
+        }
 
       }
       
