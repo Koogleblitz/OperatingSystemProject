@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -237,6 +238,26 @@ exit(int status)
   struct proc *p;
   int fd;
 
+  // lab2
+  // Calculate turnaround time 
+  int turnaround_time;
+  acquire(&tickslock);
+  curproc->finish_time = ticks;
+  turnaround_time = curproc->finish_time - curproc->begin_time;
+  release(&tickslock);
+
+  cprintf("\nProgram: %s\n", curproc->name);
+  cprintf("PID: %d\n", curproc->pid);
+  cprintf("Start Time: %d\n", curproc->begin_time);
+  cprintf("End Time: %d\n", curproc->finish_time);
+  cprintf("Turnaround Time:%d\n", turnaround_time);
+  cprintf("Burst Time: %d\n", curproc->burst_time);
+  cprintf("Waiting Time: %d\n", turnaround_time - curproc->burst_time);
+  cprintf("\n");
+
+  cprintf("Program: %s, Priority Value (Ending): %d\n", curproc->name, curproc->priority);
+  cprintf("\n");
+
   if(curproc == initproc)
     panic("init exiting");
 
@@ -339,26 +360,58 @@ scheduler(void)
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    acquire(&ptable.lock);
+
+    //[+] Gets the highest priority out of all the processes
+    int highest_priority = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state == RUNNABLE){
+        if (p->priority > highest_priority){
+          highest_priority = p->priority;
+        }
+      }
+    }
+    
 
     // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+      if(p->state != RUNNABLE){
         continue;
+      }
+      if(p->priority == highest_priority){
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
+        if (p->priority < 10){
+          p->priority = p->priority + 1;
+        }
 
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+        acquire(&tickslock);
+        int curr_ticks = ticks;
+
+        if (curr_ticks > p->previous_tick){
+          p->burst_time = p->burst_time + 1;
+          p->previous_tick = curr_ticks;
+        }
+
+        release(&tickslock);
+
+      }else{
+        if(p->priority > 0){
+          p->priority = p->priority - 1;
+        }
+      }
+      
     }
     release(&ptable.lock);
 
@@ -591,7 +644,7 @@ int waitpid(int pid, int* exit_status, int options)
 }
 
 
-int setPriority(int newPriority)
+int set_priority(int newPriority)
 {
   struct proc *process= myproc();
 

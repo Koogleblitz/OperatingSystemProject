@@ -67,15 +67,13 @@ int sys_debug(void)
   return 0;
 }
 
-//Passes int into the kernal function, filters it out if its <0. Then calls setPriority() in proc.c using that value as the new priority
-int sys_setPriority(void){
-  int prioNum;
-  if(   argint(0, &prioNum) < 0   ){
+//Passes int into the kernal function, filters it out if its <0. Then calls set_priority() in proc.c using that value as the new priority
+int sys_set_priority(void){
+  int priority_value;
+  if(argint(0, &priority_value) < 0){
     return -1;
-  } 
-
-  return setPriority(prioNum);
-
+  }
+  return set_priority(priority_value);
 }
 ///---------------\ Addendums--------------------------///
 
@@ -152,7 +150,4 @@ int sys_waitpid(void){
 
   return waitpid(pid, exit_status, options);
 }
-
-
-
 

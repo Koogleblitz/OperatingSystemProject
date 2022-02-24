@@ -28,7 +28,7 @@ int add(void);
 //[+] Addendum System calls
 int waitpid(int, int*, int);
 int debug(void);
-int setPriority(int);
+int set_priority(int);
 
 
 // ulib.c
