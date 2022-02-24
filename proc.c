@@ -249,11 +249,11 @@ exit(int status)
    cprintf("::::::::::::::::::::::::::::::::::\n");
   cprintf("\n::::::::::Program: %s\n", curproc->name);
   cprintf("PID: %d\n", curproc->pid);
-  cprintf("Start Time: %d\n", curproc->begin_time);
+  cprintf("Start Time: %d\n", curproc->start_time);
   cprintf("End Time: %d\n", curproc->finish_time);
-  cprintf("Turnaround Time:%d\n", curproc->finish_time - curproc->begin_time);
+  cprintf("Turnaround Time:%d\n", curproc->finish_time - curproc->start_time);
   cprintf("Burst Time: %d\n", curproc->burst_time);
-  cprintf("Waiting Time: %d\n", curproc->finish_time - curproc->begin_time - curproc->burst_time);
+  cprintf("Waiting Time: %d\n", curproc->finish_time - curproc->start_time - curproc->burst_time);
   cprintf("Program: %s, Priority Value (Ending): %d\n", curproc->name, curproc->priority);
   cprintf("::::::::::::::::::::::::::::::::::\n");
 

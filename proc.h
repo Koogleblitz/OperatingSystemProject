@@ -54,7 +54,7 @@ struct proc {
   // [+] Fields for Priority Scheduling:
   int priority;                 // The priority number (1-10)
   int probiority;               // the priority as a probability, will use for lottery
-  int begin_time;               // start time of turnaround time
+  int start_time;               // start time of turnaround time
   int finish_time;
   int burst_time;               // process runtime
   int previous_tick;            // last time burst_time was updated

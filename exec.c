@@ -97,7 +97,7 @@ exec(char *path, char **argv)
   // lab2
   // save ticks at start
   acquire(&tickslock);
-  curproc->begin_time = ticks;
+  curproc->start_time = ticks;
   curproc->previous_tick = ticks;
   curproc->burst_time = 0;
   release(&tickslock);
