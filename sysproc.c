@@ -56,7 +56,7 @@ sys_getpid(void)
 
 int sys_debug(void)
 {
-  cprintf("\n\n--------Process Fields-------\n");
+  cprintf("\n\n:::------Process Fields-----:::\n");
   cprintf( "Name:  %d\n", myproc()->name);
   cprintf( "Parent PID:  %d\n", myproc()->parent->pid);
   cprintf("Size:  %d\n", myproc()->sz);
@@ -64,6 +64,7 @@ int sys_debug(void)
   cprintf("Killed?:  %d\n", myproc()->killed);
   cprintf("Status:  %d\n", myproc()->status);
   cprintf("State:  %d\n", myproc()->state);
+  cprintf("Priorityu:  %d\n", myproc()->priority);
   return 0;
 }
 

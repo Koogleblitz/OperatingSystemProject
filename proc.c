@@ -122,7 +122,7 @@ found:
 
 //PAGEBREAK: 32
 // Set up first user process.
-void
+void 
 userinit(void)
 {
   struct proc *p;
@@ -248,8 +248,8 @@ exit(int status)
 
   //cprintf("rando: %d\n", lottery());
 
-  cprintf("::::::::::::::::::::::::::::::::::\n");
-  cprintf("\n::::::::::Program: %s\n", curproc->name);
+  cprintf("\n::::::::::Program: %s", curproc->name);
+  cprintf("::::::::::\n");
   cprintf("PID: %d\n", curproc->pid);
   cprintf("Start Time: %d\n", curproc->start_time);
   cprintf("End Time: %d\n", curproc->end_time);
@@ -257,7 +257,7 @@ exit(int status)
   cprintf("Burst Time: %d\n", curproc->runtime);
   cprintf("Waiting Time: %d\n", curproc->end_time - curproc->start_time - curproc->runtime);
   cprintf("Program: %s, Priority Value (Ending): %d\n", curproc->name, curproc->priority);
-  cprintf("::::::::::::::::::::::::::::::::::\n");
+  cprintf("\n\n");
 
 
 
@@ -393,16 +393,6 @@ scheduler(void)
     // Enable interrupts on this processor.
     sti();
     acquire(&ptable.lock);
-
-    //[+] Gets the highest priority out of all the processes
-    // int highest_priority = 0;
-    // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    //   if(p->state == RUNNABLE){
-    //     if (p->priority > highest_priority){
-    //       highest_priority = p->priority;
-    //     }
-    //   }
-    // }
     
 
     // Loop over process table looking for process to run.
@@ -418,9 +408,7 @@ scheduler(void)
       int lotteryNum = lottery();
 
       //[+] Run the process if ticket value surpasses random lottery number, greater priority means greater likelyhood of running-----
-       if(ticket > lotteryNum){
-
-      //if(p->priority == highest_priority){
+       if(ticket >= lotteryNum){
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -435,30 +423,38 @@ scheduler(void)
 
 
         //[+] Lower the priority of currently running process
-        if(p->priority > 0){
+        if(p->priority >= 10){
           p->priority = p->priority - 1;
         }
-
+   
 
         // [+] Update Burst Time and tick of currently running process-------
         p->runtime = p->runtime + 1;
+        acquire(&tickslock);
         p->last_tick = ticks;
+        release(&tickslock);
 
-        if(p->runtime==200){
-          cprintf("ticket: %d\n", p->probiority);
+        if(  (p->runtime==100)   ){
+          cprintf("::Tick #::---- %d", p->runtime);
+          cprintf("-----::\n");
+          cprintf("PID: %d\n", p->pid);
+          cprintf("Priority: %d\n", p->priority);
+          cprintf("ticket: %d\n", ticket);
           cprintf("lotteryNum: %d\n", lotteryNum);
         }
 
       }
       
       //[+] Raise the prioirty of non-running process
-      else{
+      else
+      {
         if (p->priority < 10){
           p->priority = p->priority + 1;
         }
       }
-      
     }
+
+
     release(&ptable.lock);
   }
 }
